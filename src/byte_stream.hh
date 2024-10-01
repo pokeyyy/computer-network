@@ -4,13 +4,15 @@
 #include <string>
 #include <string_view>
 
+using namespace std;
+
 class Reader;
 class Writer;
 
 class ByteStream
 {
 public:
-  explicit ByteStream( uint64_t capacity );
+    explicit ByteStream( uint64_t capacity );
 
   // Helper functions (provided) to access the ByteStream's Reader and Writer interfaces
   Reader& reader();
@@ -23,7 +25,11 @@ public:
 
 protected:
   // Please add any additional state to the ByteStream here, and not to the Writer and Reader interfaces.
+  string buffer_ {};
+  uint64_t written_byte {};
+  uint64_t read_byte {};
   uint64_t capacity_;
+  bool closed_ {};
   bool error_ {};
 };
 
