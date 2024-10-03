@@ -10,12 +10,12 @@ using namespace std;
 void get_URL( const string& host, const string& path )
 {
   TCPSocket mysocket;
-  mysocket.connect(Address(host,"http"));
-  mysocket.write("GET " + path + " HTTP/1.1\r\nHost: "+ host + "\r\nConnection: close\r\n\r\n");
+  mysocket.connect( Address( host, "http" ) );
+  mysocket.write( "GET " + path + " HTTP/1.1\r\nHost: " + host + "\r\nConnection: close\r\n\r\n" );
   string recvd;
-  while(!mysocket.eof()){
-  mysocket.read(recvd);
-  cout << recvd;
+  while ( !mysocket.eof() ) {
+    mysocket.read( recvd );
+    cout << recvd;
   }
   mysocket.close();
   cerr << "Function called: get_URL(" << host << ", " << path << ")\n";
