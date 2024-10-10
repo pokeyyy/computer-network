@@ -1,6 +1,9 @@
 #pragma once
 
 #include "byte_stream.hh"
+#include <list>
+#include <string>
+using namespace std;
 
 class Reassembler
 {
@@ -42,5 +45,7 @@ public:
 
 private:
   ByteStream output_; // the Reassembler writes to this ByteStream
-  
+  list<pair<uint64_t, string>> buffer_ {};
+  uint64_t unassembled_index {};
+  uint64_t eof_flag {};
 };
