@@ -47,5 +47,5 @@ private:
   ByteStream output_; // the Reassembler writes to this ByteStream
   list<pair<uint64_t, string>> buffer_ {};
   uint64_t unassembled_index {};
-  uint64_t eof_flag {};
+  uint64_t eof_flag = UINT64_MAX;
 };
