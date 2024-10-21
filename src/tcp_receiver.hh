@@ -27,4 +27,6 @@ public:
 
 private:
   Reassembler reassembler_;
+  Wrap32 isn_{1};
+  bool already_syn{false};
 };
