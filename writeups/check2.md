@@ -60,13 +60,15 @@ The ```isn_``` is the Initial Sequence Number (ISN), and I use ```already_syn```
 
   3. Finally, it inserts it into the reassembler, with the key point being the handling of the SYN signal. And the ```stream index = absolute_seqno + uint64_t( message.SYN ) - 1``` 
   ```
-  reassembler_.insert(absolute_seqno + uint64_t( message.SYN ) - 1, message.payload, message.FIN);
+  reassembler_.insert(absolute_seqno + uint64_t( message.SYN ) - 1, 
+  message.payload, message.FIN);
   ```
 
 * ```TCPReceiverMessage TCPReceiver::send() const```
   1. First, calculate the maximum available space of the writer stream
    ```
-   uint16_t available = writer().available_capacity() > UINT16_MAX? UINT16_MAX: uint16_t(writer().available_capacity());
+   uint16_t available = writer().available_capacity() > UINT16_MAX? 
+   UINT16_MAX: uint16_t(writer().available_capacity());
    ```
   2. Calculate the value of ackno, and check whether the Writer is closed.
     ```
