@@ -13,10 +13,6 @@
 
 using namespace std;
 
-class Timer{
-
-};
-
 class TCPSender
 {
 public:
@@ -55,17 +51,17 @@ private:
   Wrap32 isn_;
   uint64_t initial_RTO_ms_;
 
-  uint64_t RTO_{initial_RTO_ms_};
-  uint64_t ackno_{0};
-  uint64_t seqno_{0};
-  uint64_t timer_{0};
-  uint64_t expire_time_{0};
+  uint64_t RTO_ { initial_RTO_ms_ };
+  uint64_t ackno_ { 0 };
+  uint64_t seqno_ { 0 };
+  uint64_t timer_ { 0 };
+  uint64_t expire_time_ { 0 };
 
-  bool timer_flag_{false};
-  bool syn_sent_{false};
-  bool fin_sent_{false};
-  queue<TCPSenderMessage> outstanding_segments_{};
-  uint16_t window_size_{1};
-  uint64_t outstanding_num_{0};
-  uint64_t retransmission_num_{0};
+  bool timer_flag_ { false };
+  bool syn_sent_ { false };
+  bool fin_sent_ { false };
+  queue<TCPSenderMessage> outstanding_segments_ {};
+  uint16_t window_size_ { 1 };
+  uint64_t outstanding_num_ { 0 };
+  uint64_t retransmission_num_ { 0 };
 };

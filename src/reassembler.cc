@@ -5,12 +5,12 @@ using namespace std;
 void Reassembler::insert( uint64_t first_index, string data, bool is_last_substring )
 {
   // Your code here.
-  if ( output_.writer().is_closed()|| ( first_index >= eof_flag ) ) {
+  if ( output_.writer().is_closed() || ( first_index >= eof_flag ) ) {
     return;
   }
   uint64_t available = output_.writer().available_capacity();
   uint64_t last_index = first_index + data.size();
- 
+
   if ( is_last_substring ) {
     eof_flag = last_index;
   }
