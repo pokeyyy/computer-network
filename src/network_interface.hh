@@ -29,10 +29,11 @@ using namespace std;
 // the network interface passes it up the stack. If it's an ARP
 // request or reply, the network interface processes the frame
 // and learns or replies as necessary.
-class arp_item{
-  EthernetAddress eth_addr;
-  size_t ttl;
-};
+  class arp_item{
+    public:
+      EthernetAddress eth_addr;
+      size_t ttl;
+  };
 class NetworkInterface
 {
 public:
@@ -63,7 +64,7 @@ public:
   void recv_frame( const EthernetFrame& frame );
 
   // Called periodically when time elapses
-  void tick( size_t ms_si nce_last_tick );
+  void tick( size_t ms_since_last_tick );
 
   // Accessors
   const std::string& name() const { return name_; }
@@ -89,5 +90,5 @@ private:
   std::queue<InternetDatagram> datagrams_received_ {};
 
   unordered_map<uint32_t,arp_item> arp_table_{};
-  unordered_set<uint32_t> arp_5_{}
+  unordered_set<uint32_t> arp_5_{};
 };
