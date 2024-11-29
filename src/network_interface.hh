@@ -1,11 +1,13 @@
 #pragma once
 
 #include <queue>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "address.hh"
 #include "ethernet_frame.hh"
 #include "ipv4_datagram.hh"
-
+using namespace std;
 // A "network interface" that connects IP (the internet layer, or network layer)
 // with Ethernet (the network access layer, or link layer).
 
@@ -27,6 +29,10 @@
 // the network interface passes it up the stack. If it's an ARP
 // request or reply, the network interface processes the frame
 // and learns or replies as necessary.
+class arp_item{
+  EthernetAddress eth_addr;
+  size_t ttl;
+};
 class NetworkInterface
 {
 public:
@@ -57,7 +63,7 @@ public:
   void recv_frame( const EthernetFrame& frame );
 
   // Called periodically when time elapses
-  void tick( size_t ms_since_last_tick );
+  void tick( size_t ms_si nce_last_tick );
 
   // Accessors
   const std::string& name() const { return name_; }
@@ -81,4 +87,7 @@ private:
 
   // Datagrams that have been received
   std::queue<InternetDatagram> datagrams_received_ {};
+
+  unordered_map<uint32_t,arp_item> arp_table_{};
+  unordered_set<uint32_t> arp_5_{}
 };
