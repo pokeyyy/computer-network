@@ -30,21 +30,61 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
   uint32_t next_address = next_hop.ipv4_numeric();
   auto it = arp_table_.find( next_address );
   if(it == arp_table_.end()){
+    if(arp_5_.find(next_address) == arp_5_.end()){
+      EthernetAddress target_eth = EthernetAddress{};
+      ARPMessage arp{.opcode = ARPMessage::OPCODE_REQUEST, .sender_ethernet_address = ethernet_address_, .sender_ip_address = ip_address_.ipv4_numeric(), .target_ethernet_address = target_eth, .target_ip_address = next_address};
 
+      EthernetAddress dst = ETHERNET_BROADCAST;
+      EthernetAddress src = ethernet_address_;
+      EthernetHeader header{.dst = dst, .src = src, .type = EthernetHeader::TYPE_ARP};
+      EthernetFrame frame{.header = header,.payload = serialize( arp )};
+      transmit( frame );
+      arp_5_.emplace( next_address, 5000 );
+    }
+    arp_waiting_.emplace(next_address,dgram);
   }
   else{
     EthernetAddress dst = it->second.eth_addr;
     EthernetAddress src = ethernet_address_;
-    EthernetFrame frame{{.dst = dst, .src = src, .type = EthernetHeader::TYPE_IPv4},serialize(dgram)};
-
+    EthernetHeader header{.dst = dst, .src = src, .type = EthernetHeader::TYPE_IPv4};
+    EthernetFrame frame{.header = header,.payload = serialize( dgram )};
+    transmit(frame);
   }
 }
 
 //! \param[in] frame the incoming Ethernet frame
 void NetworkInterface::recv_frame( const EthernetFrame& frame )
 {
-  // Your code here.
-  (void)frame;
+  if ( frame.header.dst != ETHERNET_BROADCAST && frame.header.dst != ethernet_address_ )
+    return;
+
+  if (frame.header.type == EthernetHeader::TYPE_IPv4) {
+    InternetDatagram datagram;
+    if ( !parse( datagram, frame.payload ) )
+      return;
+    datagrams_received_.emplace( datagram );
+  }
+  else{
+    ARPMessage arp_msg;
+    if ( !parse(arp_msg, frame.payload) )
+      return;
+    
+    uint32_t src_ip = arp_msg.sender_ip_address;
+    uint32_t dst_ip = arp_msg.target_ip_address;
+    EthernetAddress src_eth = arp_msg.sender_ethernet_address;
+    EthernetAddress dst_eth = arp_msg.target_ethernet_address;
+    if( arp_msg.opcode == ARPMessage::OPCODE_REQUEST && dst_ip == ip_address_.ipv4_numeric() ){
+      ARPMessage arp_reply{.opcode = ARPMessage::OPCODE_REPLY, .sender_ethernet_address = ethernet_address_, .sender_ip_address = ip_address_.ipv4_numeric(), .target_ethernet_address = src_eth, .target_ip_address = src_ip};
+
+      EthernetHeader header{.dst = src_eth, .src = ethernet_address_, .type = EthernetHeader::TYPE_ARP};
+      EthernetFrame frame{.header = header, .payload = serialize(arp_reply)};
+      transmit( frame );
+    }
+    else if( arp_msg.opcode == ARPMessage::OPCODE_REPLY ){
+      arp_table_[src_ip] = {src_eth, 30000};
+      
+    }
+  }
 }
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method

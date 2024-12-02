@@ -90,5 +90,6 @@ private:
   std::queue<InternetDatagram> datagrams_received_ {};
 
   unordered_map<uint32_t,arp_item> arp_table_{};
-  unordered_set<uint32_t> arp_5_{};
+  unordered_set<uint32_t, size_t> arp_5_{};
+  unordered_multimap<uint32_t,InternetDatagram> arp_waiting_{};
 };
