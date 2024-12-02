@@ -41,7 +41,7 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
       transmit( frame );
       arp_5_.emplace( next_address, 5000 );
     }
-    arp_waiting_.emplace(next_address,dgram);
+    arp_ip_waiting_.emplace(next_address,dgram);
   }
   else{
     EthernetAddress dst = it->second.eth_addr;
@@ -72,17 +72,20 @@ void NetworkInterface::recv_frame( const EthernetFrame& frame )
     uint32_t src_ip = arp_msg.sender_ip_address;
     uint32_t dst_ip = arp_msg.target_ip_address;
     EthernetAddress src_eth = arp_msg.sender_ethernet_address;
-    EthernetAddress dst_eth = arp_msg.target_ethernet_address;
+    //EthernetAddress dst_eth = arp_msg.target_ethernet_address;
     if( arp_msg.opcode == ARPMessage::OPCODE_REQUEST && dst_ip == ip_address_.ipv4_numeric() ){
       ARPMessage arp_reply{.opcode = ARPMessage::OPCODE_REPLY, .sender_ethernet_address = ethernet_address_, .sender_ip_address = ip_address_.ipv4_numeric(), .target_ethernet_address = src_eth, .target_ip_address = src_ip};
 
       EthernetHeader header{.dst = src_eth, .src = ethernet_address_, .type = EthernetHeader::TYPE_ARP};
-      EthernetFrame frame{.header = header, .payload = serialize(arp_reply)};
-      transmit( frame );
+      EthernetFrame send_frame{.header = header, .payload = serialize(arp_reply)};
+      transmit( send_frame );
     }
     else if( arp_msg.opcode == ARPMessage::OPCODE_REPLY ){
       arp_table_[src_ip] = {src_eth, 30000};
-      
+      arp_5_.erase(src_ip);
+      auto it = arp_ip_waiting_.find(src_ip);
+      if( it != arp_ip_waiting_.end() )
+        send_datagram( it->second, Address::from_ipv4_numeric(src_ip) );
     }
   }
 }
@@ -90,6 +93,23 @@ void NetworkInterface::recv_frame( const EthernetFrame& frame )
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
 void NetworkInterface::tick( const size_t ms_since_last_tick )
 {
-  // Your code here.
-  (void)ms_since_last_tick;
+  for ( auto iter = arp_table_.begin(); iter != arp_table_.end(); ++iter ) {
+    if (iter->second.ttl <= ms_since_last_tick)
+      arp_table_.erase(iter);
+    else 
+      iter->second.ttl -= ms_since_last_tick;
+  }
+
+  for ( auto iter = arp_5_.begin(); iter != arp_5_.end(); ++iter ) {
+    if ( iter->second <= ms_since_last_tick ) {
+      ARPMessage arp_request{.opcode = ARPMessage::OPCODE_REQUEST, .sender_ethernet_address = ethernet_address_, .sender_ip_address = ip_address_.ipv4_numeric(), .target_ethernet_address = {},.target_ip_address = iter->first };
+
+      EthernetHeader header{.dst = ETHERNET_BROADCAST, .src = ethernet_address_, .type = EthernetHeader::TYPE_ARP};
+      EthernetFrame frame{.header = header, .payload = serialize( arp_request )};
+      transmit(frame);
+      iter->second = 5000;
+    } 
+    else
+      iter->second -= ms_since_last_tick;
+  }
 }
