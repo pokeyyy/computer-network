@@ -20,11 +20,35 @@ void Router::add_route( const uint32_t route_prefix,
        << static_cast<int>( prefix_length ) << " => " << ( next_hop.has_value() ? next_hop->ip() : "(direct)" )
        << " on interface " << interface_num << "\n";
 
-  // Your code here.
+  router_table_.insert({route_prefix,prefix_length,next_hop,interface_num});
 }
 
 // Go through all the interfaces, and route every incoming datagram to its proper outgoing interface.
 void Router::route()
 {
-  // Your code here.
+  for (auto& interfacePtr : _interfaces) {
+    auto& datagram_all = interfacePtr->datagrams_received();
+    while(!datagram_all.empty()){
+      InternetDatagram datagram = datagram_all.front();
+      datagram_all.pop();
+      uint32_t dst = datagram.header.dst;
+
+      auto router_it = router_table_.begin();
+      for(; router_it != router_table_.end(); ++ router_it){
+        uint32_t mask = ~((1 << (32 - router_it->prefix_length)) - 1);
+        if((router_it->route_prefix & mask) == (dst & mask))
+          break;
+      }
+      if(router_it == router_table_.end())
+        continue;
+      
+      datagram.header.ttl--;
+      if(datagram.header.ttl == 0)
+        continue;
+      datagram.header.compute_checksum();
+
+      Address next_addr = router_it->next_hop.has_value()? router_it->next_hop.value() : Address::from_ipv4_numeric(dst);
+      interface(router_it->interface_num)->send_datagram(datagram, next_addr);
+    }
+  }
 }

@@ -49,5 +49,5 @@ public:
 private:
   // The router's collection of network interfaces
   std::vector<std::shared_ptr<NetworkInterface>> _interfaces {};
-  set<router_item> routing_table_ {};
+  set<router_item> router_table_ {};
 };
