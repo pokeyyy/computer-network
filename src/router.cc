@@ -35,7 +35,7 @@ void Router::route()
 
       auto router_it = router_table_.begin();
       for(; router_it != router_table_.end(); ++ router_it){
-        uint32_t mask = ~((1 << (32 - router_it->prefix_length)) - 1);
+        uint32_t mask = ~(((uint64_t)1 << (32 - router_it->prefix_length)) - 1);
         if((router_it->route_prefix & mask) == (dst & mask))
           break;
       }
